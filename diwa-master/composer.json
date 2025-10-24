@@ -1,0 +1,21 @@
+{
+  "name": "snsttr/diwa",
+  "description": "A Deliberately Insecure Web Application",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Tim Steufmehl",
+      "email": "t.steufmehl@enfokus.de"
+    }
+  ],
+  "config": {
+    "vendor-dir": "app/vendor"
+  },
+  "require": {
+    "erusev/parsedown": "1.6.*"
+  },
+  "require-dev": {
+    "heroku/heroku-buildpack-php": "*"
+  }
+}

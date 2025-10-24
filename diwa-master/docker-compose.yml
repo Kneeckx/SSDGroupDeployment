@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  diwa-web:
+    build: .
+    container_name: diwa-app
+    ports:
+      - "80:80"
+    volumes:
+      - ./app:/var/www/html
+      - ./database:/var/www/html/database
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html
+    restart: unless-stopped
+    
+networks:
+  default:
+    name: diwa-network

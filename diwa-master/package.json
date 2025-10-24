@@ -1,0 +1,15 @@
+{
+  "name": "diwa-app",
+  "version": "1.0.0",
+  "description": "Deliberately Insecure Web Application",
+  "main": "app/index.php",
+  "scripts": {
+    "start": "php -S 0.0.0.0:8080 -t app",
+    "deploy": "echo 'DIWA deployment ready'"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

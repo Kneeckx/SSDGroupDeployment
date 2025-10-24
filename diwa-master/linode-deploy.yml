@@ -1,0 +1,65 @@
+# Linode Deployment Configuration for DIWA
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: diwa-config
+data:
+  deploy.sh: |
+    #!/bin/bash
+    echo "Deploying DIWA to Linode..."
+    
+    # Install dependencies
+    apt-get update -y
+    apt-get install -y apache2 php8.1 php8.1-sqlite3 php8.1-mbstring php8.1-xml php8.1-curl
+    
+    # Configure Apache
+    a2enmod rewrite
+    a2ensite diwa.conf
+    a2dissite 000-default.conf
+    
+    # Set permissions
+    chown -R www-data:www-data /var/www/html
+    chmod -R 755 /var/www/html
+    mkdir -p /var/www/html/database
+    chmod 777 /var/www/html/database
+    
+    # Restart services
+    systemctl restart apache2
+    systemctl enable apache2
+    
+    echo "DIWA deployed successfully!"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: diwa-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: diwa
+  template:
+    metadata:
+      labels:
+        app: diwa
+    spec:
+      containers:
+      - name: diwa
+        image: diwa:latest
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: diwa-service
+spec:
+  selector:
+    app: diwa
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
