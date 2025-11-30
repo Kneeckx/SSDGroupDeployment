@@ -5,14 +5,24 @@ if(isset($_SESSION['user_id'])) {
     return;
 }
 
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 $errors = array();
 
 // process post data
 if('post' === strtolower($_SERVER['REQUEST_METHOD']) && isset($_POST)) {
-    if(!isset($_POST['username']) || 3 > strlen($_POST['username'])) {
-        $errors[] = 'Your Username has to be at least 3 Characters long.';
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== $_SESSION['csrf_token']) {
+        $errors[] = 'Invalid CSRF token. Please reload the page and try again.';
     }
-    else {
+    if(!isset($_POST['username']) || strlen(trim($_POST['username'])) < 3) {
+        $errors[] = 'Your Username must be at least 3 non-space characters.';
+    } elseif (preg_match('/^\s+$/', $_POST['username'])) {
+        $errors[] = 'Your Username cannot be only spaces.';
+    } else {
         // validate email-address
         if(!isset($_POST['email']) || false === filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
             $errors[] = 'Please enter a valid Email address.';
@@ -40,12 +50,26 @@ if('post' === strtolower($_SERVER['REQUEST_METHOD']) && isset($_POST)) {
     }
 
     if(!empty($_POST['password'])) {
-        // do passwords match?
-        if ($_POST['password'] !== $_POST['password-repeat']) {
-            $errors[] = 'The passwords do not match.';
+        $password = $_POST['password'];
+        if (strlen(trim($password)) < 8) {
+            $errors[] = 'Your Password must be at least 8 characters.';
+        } elseif (preg_match('/^\s+$/', $password)) {
+            $errors[] = 'Your Password cannot be only spaces.';
+        } elseif (!preg_match('/[A-Z]/', $password)) {
+            $errors[] = 'Your Password must contain at least one uppercase letter.';
+        } elseif (!preg_match('/[a-z]/', $password)) {
+            $errors[] = 'Your Password must contain at least one lowercase letter.';
+        } elseif (!preg_match('/\d/', $password)) {
+            $errors[] = 'Your Password must contain at least one digit.';
+        } elseif (!preg_match('/[^A-Za-z0-9]/', $password)) {
+            $errors[] = 'Your Password must contain at least one special character.';
+        } else {
+            // do passwords match?
+            if ($password !== $_POST['password-repeat']) {
+                $errors[] = 'The passwords do not match.';
+            }
         }
-    }
-    else {
+    } else {
         $errors[] = 'Please enter a Password.';
     }
 
@@ -96,20 +120,23 @@ $countryList = array('Afghanistan', 'Albania', 'Algeria', 'American Samoa', 'And
         ?>
         <p class="text-center">
         <form method="post" action="?page=register">
+            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
             <div class="form-group">
                 <label for="username">Username:</label>
-                <input type="text" class="form-control" name="username" value="<?php echo (isset($_POST['username']) ? $_POST['username'] : ''); ?>" id="username">
+                <input type="text" class="form-control" name="username" value="<?php echo (isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''); ?>" id="username">
             </div>
             <div class="form-group">
                 <label for="email">Email address:</label>
-                <input type="email" class="form-control" name="email" value="<?php echo (isset($_POST['email']) ? $_POST['email'] : ''); ?>" id="email">
+                <input type="email" class="form-control" name="email" value="<?php echo (isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''); ?>" id="email">
             </div>
             <div class="form-group">
                 <label for="country">Location:</label>
                 <select name="country" class="form-control" id="country">
                     <?php
                     foreach ($countryList as $country) {
-                        echo '<option value="' . $country . '"' . (isset($_POST['country']) && $country == $_POST['country'] ? ' selected="selected"' : '') . '>' . $country . '</option>';
+                        $safeCountry = htmlspecialchars($country);
+                        $selected = (isset($_POST['country']) && $_POST['country'] == $country) ? ' selected="selected"' : '';
+                        echo '<option value="' . $safeCountry . '"' . $selected . '>' . $safeCountry . '</option>';
                     }
                     ?>
                 </select>

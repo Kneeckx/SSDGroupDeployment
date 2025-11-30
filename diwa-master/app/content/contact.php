@@ -1,7 +1,16 @@
 <?php
 // process post data
+session_start();
 $errors = array();
+// CSRF token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 if ('post' === strtolower($_SERVER['REQUEST_METHOD']) && isset($_POST)) {
+    // CSRF token validation
+    if (!isset($_POST['csrf_token']) || !hash_equals($_SESSION['csrf_token'], $_POST['csrf_token'])) {
+        $errors[] = 'Invalid CSRF token. Please reload the page and try again.';
+    }
     // check if name has enough chars
     if (!isset($_POST['name']) || 3 > strlen($_POST['name'])) {
         $errors[] = 'Your name has to be at least 3 Characters long.';
@@ -76,13 +85,14 @@ catch(Exception $ex) {
         }
         ?>
         <form action="?page=contact" method="post">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <div class="form-group">
                 <label for="name">Your Name:</label>
-                <input type="text" class="form-control" name="name" value="<?php echo (isset($_POST['name']) ? $_POST['name'] : ''); ?>" id="name">
+                <input type="text" class="form-control" name="name" value="<?php echo (isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''); ?>" id="name">
             </div>
             <div class="form-group">
                 <label for="email">Your E-Mail-Adress:</label>
-                <input type="email" class="form-control" name="email" value="<?php echo (isset($_POST['email']) ? $_POST['email'] : ''); ?>" id="email">
+                <input type="email" class="form-control" name="email" value="<?php echo (isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''); ?>" id="email">
             </div>
             <div class="form-group">
                 <p><strong>Recipients:</strong></p>
@@ -102,7 +112,7 @@ catch(Exception $ex) {
             </div>
             <div class="form-group">
                 <label for="message">Your Message:</label>
-                <textarea class="form-control" rows="5" name="message" id="message"><?php echo isset($_POST['message']) ? $_POST['message'] : ''; ?></textarea>
+                <textarea class="form-control" rows="5" name="message" id="message"><?php echo isset($_POST['message']) ? htmlspecialchars($_POST['message']) : ''; ?></textarea>
             </div>
             <button type="submit" class="btn btn-primary"><?php echo icon('envelope'); ?> Send Message</button>
         </form>

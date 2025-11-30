@@ -1,4 +1,6 @@
 <?php
+// Clickjacking prevention
+header('X-Frame-Options: DENY');
 define('HEADER_TEMPLATE', 1);
 
 function menuEntry($pTitle, $pPage = null) {
