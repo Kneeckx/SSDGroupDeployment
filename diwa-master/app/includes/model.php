@@ -1,6 +1,16 @@
 <?php
 
 class Model {
+    public function getAllAdmins() {
+        try {
+            $stmt = $this->db->prepare('SELECT id, username, email, country, is_admin FROM ' . $this->prefix . 'users WHERE is_admin = 1');
+            $stmt->execute();
+            return $stmt->fetchAll();
+        }
+        catch(Exception $ex) {
+            error(500, 'Query could not be executed', $ex);
+        }
+    }
 
     private $db = null;
     private $prefix = null;

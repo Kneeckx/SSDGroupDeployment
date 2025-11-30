@@ -1,4 +1,6 @@
 <?php
+require_once(dirname(__DIR__) . '/includes/model.php');
+require_once(dirname(__DIR__) . '/includes/bootstrap.php');
 // process post data
 session_start();
 $errors = array();
